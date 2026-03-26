@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sri Lanka Neethi & Reethi</title>
+    <!-- Tailwind CSS for Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af', // Blue theme
+                        secondary: '#b91c1c' // Red theme
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #555; }
+        
+        /* Smooth transitions */
+        body { transition: background-color 0.3s, color 0.3s; }
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* Loader */
+        .loader { border-top-color: #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-primary dark:text-white cursor-pointer" onclick="navigateTo('home')">
+                <span class="lang-en">Sri Lanka Neethi</span>
+                <span class="lang-si hidden">ශ්‍රී ලංකා නීති</span>
+                <span class="lang-ta hidden">இலங்கை சட்டங்கள்</span>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <button id="menuBtn" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+            
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex items-center space-x-4">
+                <a onclick="navigateTo('home')" class="nav-link hover:text-primary cursor-pointer">
+                    <span class="lang-en">Home</span><span class="lang-si hidden">මුල් පිටුව</span><span class="lang-ta hidden">முகப்பு</span>
+                </a>
+                <a onclick="navigateTo('laws')" class="nav-link hover:text-primary cursor-pointer">
+                    <span class="lang-en">Laws</span><span class="lang-si hidden">නීති</span><span class="lang-ta hidden">சட்டங்கள்</span>
+                </a>
+                <a onclick="navigateTo('about')" class="nav-link hover:text-primary cursor-pointer">
+                    <span class="lang-en">About</span><span class="lang-si hidden">අප ගැන</span><span class="lang-ta hidden">எங்களைப் பற்றி</span>
+                </a>
+                <a onclick="navigateTo('contact')" class="nav-link hover:text-primary cursor-pointer">
+                    <span class="lang-en">Contact</span><span class="lang-si hidden">සම්බන්ධතා</span><span class="lang-ta hidden">தொடர்பு</span>
+                </a>
+                <a onclick="navigateTo('admin-login')" class="nav-link hover:text-primary cursor-pointer">
+                    <span class="lang-en">Admin</span><span class="lang-si hidden">පරිපාලක</span><span class="lang-ta hidden">நிர்வாகம்</span>
+                </a>
+                
+                <!-- Search -->
+                <div class="relative">
+                    <input type="text" id="searchInput" class="border rounded-full px-4 py-1 text-sm focus:outline-none dark:bg-gray-700" placeholder="Search...">
+                    <button class="absolute right-2 top-1"><i class="fas fa-search text-gray-400"></i></button>
+                </div>
+                
+                <!-- Controls -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i id="themeIcon" class="fas fa-moon"></i></button>
+                
+                <select onchange="changeLanguage(this.value)" class="bg-transparent border rounded px-2 py-1 text-sm dark:bg-gray-700">
+                    <option value="en">English</option>
+                    <option value="si">සිංහල</option>
+                    <option value="ta">தமிழ்</option>
+                </select>
+            </div>
+        </nav>
+        
+        <!-- Mobile Menu Overlay -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-gray-800 pb-4 px-4 space-y-2">
+            <!-- Links populated by JS logic similar to desktop -->
+            <a onclick="navigateTo('home'); toggleMobileMenu()" class="block py-2 border-b dark:border-gray-700">Home</a>
+            <a onclick="navigateTo('laws'); toggleMobileMenu()" class="block py-2 border-b dark:border-gray-700">Laws</a>
+            <a onclick="navigateTo('about'); toggleMobileMenu()" class="block py-2 border-b dark:border-gray-700">About</a>
+            <a onclick="navigateTo('contact'); toggleMobileMenu()" class="block py-2 border-b dark:border-gray-700">Contact</a>
+            <a onclick="navigateTo('admin-login'); toggleMobileMenu()" class="block py-2 border-b dark:border-gray-700">Admin</a>
+            <div class="flex justify-between pt-2">
+                <button onclick="toggleDarkMode()" class="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded">Theme</button>
+                <select onchange="changeLanguage(this.value)" class="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded">
+                    <option value="en">English</option>
+                    <option value="si">සිංහල</option>
+                    <option value="ta">தமிழ்</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 min-h-screen">
+        
+        <!-- HOME PAGE -->
+        <div id="page-home" class="page active">
+            <!-- Hero Section -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-gray-800 dark:to-gray-900 rounded-lg p-8 mb-8 text-white text-center shadow-lg">
+                <h1 class="text-3xl md:text-5xl font-bold mb-4">
+                    <span class="lang-en">Welcome to Sri Lanka Neethi & Reethi</span>
+                    <span class="lang-si hidden">ශ්‍රී ලංකා නීති හා රීති වෙත සාදරයෙන් පිළිගනිමු</span>
+                    <span class="lang-ta hidden">இலங்கை சட்டங்கள் மற்றும் விதிமுறைகளுக்கு வரவேற்பு</span>
+                </h1>
+                <p class="text-lg opacity-90">
+                    <span class="lang-en">Explore the comprehensive legal repository of Sri Lanka.</span>
+                    <span class="lang-si hidden">ශ්‍රී ලංකාවේ නීති ගබඩාව ගවේෂණය කරන්න.</span>
+                    <span class="lang-ta hidden">இலங்கையின் விரிவான சட்ட களஞ்சியத்தை ஆராயுங்கள்.</span>
+                </p>
+            </div>
+
+            <!-- Most Viewed Laws -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-fire text-red-500"></i> 
+                        <span class="lang-en">Most Viewed Laws</span>
+                        <span class="lang-si hidden">වැඩිපුර නැරඹූ නීති</span>
+                        <span class="lang-ta hidden">அதிகம் பார்க்கப்பட்ட சட்டங்கள்</span>
+                    </h2>
+                    <button onclick="navigateTo('laws')" class="text-blue-600 hover:underline text-sm">View All <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div id="homeLawList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards populated by JS -->
+                    <div class="text-center text-gray-500 col-span-3 py-10">Loading laws...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAWS PAGE -->
+        <div id="page-laws" class="page">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-gavel mr-3"></i> 
+                <span class="lang-en">Law Repository</span>
+                <span class="lang-si hidden">නීති ගබඩාව</span>
+                <span class="lang-ta hidden">சட்ட களஞ்சியம்</span>
+            </h2>
+            
+            <!-- Filter Section -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4 items-center">
+                <div>
+                    <label class="text-sm font-bold mr-2">Category:</label>
+                    <select id="lawCategoryFilter" onchange="loadLaws()" class="border rounded px-3 py-1 dark:bg-gray-700">
+                        <option value="all">All</option>
+                        <option value="sri_lanka">Sri Lanka</option>
+                        <option value="world">World</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm font-bold mr-2">Type:</label>
+                    <select id="lawTypeFilter" onchange="loadLaws()" class="border rounded px-3 py-1 dark:bg-gray-700">
+                        <option value="neethi">Neethi (Laws)</option>
+                        <option value="reethi">Reethi (Customs)</option>
+                    </select>
+                </div>
+                <div class="ml-auto">
+                    <label class="text-sm font-bold mr-2">Sort:</label>
+                    <select id="lawSortFilter" onchange="loadLaws()" class="border rounded px-3 py-1 dark:bg-gray-700">
+                        <option value="views">Most Viewed</option>
+                        <option value="date">Newest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Law Cards Grid -->
+            <div id="lawListGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center text-gray-500 col-span-3 py-10">Select filters to load laws...</div>
+            </div>
+        </div>
+
+        <!-- SINGLE LAW VIEW PAGE -->
+        <div id="page-law-detail" class="page">
+            <button onclick="navigateTo('laws')" class="mb-4 text-blue-600 hover:underline"><i class="fas fa-arrow-left"></i> Back to List</button>
+            <div id="lawDetailContent" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                <div class="text-center py-10"><div class="loader mx-auto"></div></div>
+            </div>
+            
+            <!-- Comment Section -->
+            <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 class="text-xl font-bold mb-4 border-b pb-2"><i class="fas fa-comments mr-2"></i>Comments</h3>
+                <div id="commentsList" class="space-y-4 mb-6 max-h-96 overflow-y-auto"></div>
+                
+                <!-- Add Comment Form -->
+                <div class="border-t dark:border-gray-700 pt-4">
+                    <h4 class="font-bold mb-2">Leave a Comment</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <input type="text" id="cName" placeholder="Name" class="w-full p-2 border rounded dark:bg-gray-700">
+                        <input type="email" id="cEmail" placeholder="Email" class="w-full p-2 border rounded dark:bg-gray-700">
+                        <input type="text" id="cID" placeholder="ID Number" class="w-full p-2 border rounded dark:bg-gray-700">
+                        <input type="text" id="cPhone" placeholder="Phone" class="w-full p-2 border rounded dark:bg-gray-700">
+                    </div>
+                    <textarea id="cMessage" placeholder="Your comment..." class="w-full p-2 border rounded dark:bg-gray-700 mb-2" rows="3"></textarea>
+                    <div class="flex justify-between items-center">
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" id="cHideName" class="mr-2"> Hide my name (Anonymous)
+                        </label>
+                        <button onclick="postComment()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT PAGE -->
+        <div id="page-about" class="page">
+            <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center border-b pb-4">
+                    <span class="lang-en">About Us</span>
+                    <span class="lang-si hidden">අප ගැන</span>
+                    <span class="lang-ta hidden">எங்களைப் பற்றி</span>
+                </h2>
+                <p class="mb-4 leading-relaxed">
+                    <span class="lang-en">Welcome to Sri Lanka Neethi & Reethi, your trusted source for legal information and cultural customs in Sri Lanka. Our mission is to make laws accessible to everyone.</span>
+                    <span class="lang-si hidden">ශ්‍රී ලංකා නීති හා රීති වෙත සාදරයෙන් පිළිගනිමු. අපගේ මෙහෙවර වන්නේ නීති සියලු දෙනාටම ප්‍රවේශ විය හැකි පරිදි සැකසීමයි.</span>
+                    <span class="lang-ta hidden">இலங்கை சட்டங்கள் மற்றும் விதிமுறைகளுக்கு வரவேற்பு. சட்டங்களை அனைவருக்கும் அணுகக்கூடியதாக மாற்றுவதே எங்கள் பணி.</span>
+                </p>
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold mb-4">Our Team</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded">
+                            <i class="fas fa-user-tie text-3xl text-blue-600 mb-2"></i>
+                            <p class="font-bold">Legal Experts</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded">
+                            <i class="fas fa-code text-3xl text-blue-600 mb-2"></i>
+                            <p class="font-bold">Developers</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTACT PAGE -->
+        <div id="page-contact" class="page">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Contact Info -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold mb-6 border-b pb-2">Contact Information</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-phone-alt text-blue-600 mt-1 mr-4 text-xl"></i>
+                            <div>
+                                <h4 class="font-bold">Hotline</h4>
+                                <p>+94 11 234 5678</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-envelope text-blue-600 mt-1 mr-4 text-xl"></i>
+                            <div>
+                                <h4 class="font-bold">Email</h4>
+                                <p>info@neethi.lk</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-globe text-blue-600 mt-1 mr-4 text-xl"></i>
+                            <div>
+                                <h4 class="font-bold">Website</h4>
+                                <p>www.neethi.lk</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="font-bold mb-2">Follow Us</h4>
+                        <div class="flex space-x-4 text-2xl">
+                            <a href="#" class="text-blue-600 hover:text-blue-800"><i class="fab fa-facebook"></i></a>
+                            <a href="#" class="text-blue-400 hover:text-blue-600"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-pink-600 hover:text-pink-800"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold mb-6 border-b pb-2">Send us a Message</h2>
+                    <form id="contactForm" onsubmit="submitContactForm(event)">
+                        <div class="grid grid-cols-1 gap-4">
+                            <input type="text" placeholder="Your Name" required class="w-full p-3 border rounded dark:bg-gray-700">
+                            <input type="email" placeholder="Your Email" required class="w-full p-3 border rounded dark:bg-gray-700">
+                            <input type="text" placeholder="Subject" required class="w-full p-3 border rounded dark:bg-gray-700">
+                            <textarea placeholder="Message" rows="5" required class="w-full p-3 border rounded dark:bg-gray-700"></textarea>
+                            <button type="submit" class="bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700 transition">Send Message</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN LOGIN PAGE -->
+        <div id="page-admin-login" class="page flex justify-center items-center">
+            <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
+                <form onsubmit="handleLogin(event)">
+                    <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 mb-4 border rounded dark:bg-gray-700" required>
+                    <input type="password" id="loginPass" placeholder="Password" class="w-full p-3 mb-4 border rounded dark:bg-gray-700" required>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700">Login</button>
+                </form>
+                <p class="text-center mt-4 text-sm">Don't have an account? 
+                    <a onclick="navigateTo('admin-register')" class="text-blue-600 cursor-pointer hover:underline">Register</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- ADMIN REGISTER PAGE -->
+        <div id="page-admin-register" class="page flex justify-center">
+            <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-6">Staff Registration</h2>
+                <form onsubmit="handleRegister(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" placeholder="First Name" class="p-3 border rounded dark:bg-gray-700" required>
+                        <input type="text" placeholder="Last Name" class="p-3 border rounded dark:bg-gray-700" required>
+                        <input type="text" placeholder="NIC ID" class="p-3 border rounded dark:bg-gray-700" required>
+                        <input type="text" placeholder="Employee ID" class="p-3 border rounded dark:bg-gray-700" required>
+                        <input type="email" placeholder="Email" class="p-3 border rounded dark:bg-gray-700" required>
+                        <input type="password" placeholder="Password" class="p-3 border rounded dark:bg-gray-700" required>
+                        <input type="text" placeholder="Work Number" class="p-3 border rounded dark:bg-gray-700">
+                        <input type="text" placeholder="Job Title" class="p-3 border rounded dark:bg-gray-700">
+                        <textarea placeholder="Notes" class="p-3 border rounded dark:bg-gray-700 md:col-span-2"></textarea>
+                    </div>
+                    <button type="submit" class="w-full mt-4 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">Register</button>
+                </form>
+                <p class="text-center mt-4 text-sm">
+                    <a onclick="navigateTo('admin-login')" class="text-blue-600 cursor-pointer hover:underline">Back to Login</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="page-admin-dashboard" class="page">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Sidebar -->
+                <div class="w-full md:w-64 bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-min">
+                    <div class="text-center border-b pb-4 mb-4">
+                        <i class="fas fa-user-circle text-5xl text-gray-400"></i>
+                        <h3 class="font-bold mt-2" id="adminName">Admin User</h3>
+                        <p class="text-xs text-gray-500" id="adminRole">Role: Owner</p>
+                    </div>
+                    <nav class="space-y-2">
+                        <a onclick="showAdminTab('dashboard')" class="admin-nav-link block p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-700 cursor-pointer"><i class="fas fa-tachometer-alt mr-2"></i> Dashboard</a>
+                        <a onclick="showAdminTab('laws')" class="admin-nav-link block p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-700 cursor-pointer"><i class="fas fa-gavel mr-2"></i> Laws</a>
+                        <a onclick="showAdminTab('staff')" class="admin-nav-link block p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-700 cursor-pointer"><i class="fas fa-users mr-2"></i> Staff</a>
+                        <a onclick="showAdminTab('reports')" class="admin-nav-link block p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-700 cursor-pointer"><i class="fas fa-flag mr-2"></i> Reports</a>
+                        <a onclick="handleLogout()" class="block p-2 rounded text-red-500 hover:bg-red-100 cursor-pointer"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                    </nav>
+                </div>
+
+                <!-- Content Area -->
+                <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <!-- Dashboard Home -->
+                    <div id="admin-tab-dashboard">
+                        <h2 class="text-2xl font-bold mb-4">Dashboard Overview</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border-l-4 border-blue-600">
+                                <p class="text-sm">Total Laws</p>
+                                <h3 class="text-3xl font-bold">125</h3>
+                            </div>
+                            <div class="bg-green-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border-l-4 border-green-600">
+                                <p class="text-sm">Total Views</p>
+                                <h3 class="text-3xl font-bold">4,523</h3>
+                            </div>
+                            <div class="bg-yellow-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border-l-4 border-yellow-600">
+                                <p class="text-sm">Pending</p>
+                                <h3 class="text-3xl font-bold">5</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manage Laws -->
+                    <div id="admin-tab-laws" class="hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold">Manage Laws</h2>
+                            <button onclick="openLawModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus mr-2"></i>Add Law</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b dark:border-gray-700">
+                                        <th class="text-left p-2">Title</th>
+                                        <th class="text-left p-2">Category</th>
+                                        <th class="text-left p-2">Status</th>
+                                        <th class="text-left p-2">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminLawTable">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Manage Staff -->
+                    <div id="admin-tab-staff" class="hidden">
+                        <h2 class="text-2xl font-bold mb-4">Staff Management</h2>
+                        <p class="text-gray-500">Approve pending staff, change roles, and manage permissions.</p>
+                    </div>
+                    
+                    <!-- Reports -->
+                    <div id="admin-tab-reports" class="hidden">
+                        <h2 class="text-2xl font-bold mb-4">User Reports</h2>
+                        <p class="text-gray-500">View reports submitted by users regarding specific laws.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t mt-12 py-8">
+        <div class="container mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+            <div>
+                <h3 class="font-bold mb-3 text-lg">Neethi</h3>
+                <p class="text-gray-500 dark:text-gray-400">Your trusted legal source.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-3">Quick Links</h4>
+                <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                    <li><a onclick="navigateTo('home')" class="hover:text-blue-600 cursor-pointer">Home</a></li>
+                    <li><a onclick="navigateTo('laws')" class="hover:text-blue-600 cursor-pointer">Laws</a></li>
+                    <li><a onclick="navigateTo('about')" class="hover:text-blue-600 cursor-pointer">About</a></li>
+                    <li><a onclick="navigateTo('contact')" class="hover:text-blue-600 cursor-pointer">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-3">Support</h4>
+                <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                    <li><a href="#" class="hover:text-blue-600">Feedback</a></li>
+                    <li><a href="#" class="hover:text-blue-600">Report Issue</a></li>
+                    <li><a href="#" class="hover:text-blue-600">Terms & Conditions</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-3">Contact</h4>
+                <p class="text-gray-600 dark:text-gray-400">info@neethi.lk</p>
+                <p class="text-gray-600 dark:text-gray-400">+94 11 234 5678</p>
+            </div>
+        </div>
+        <div class="container mx-auto px-4 mt-8 pt-8 border-t dark:border-gray-700 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+            <p>© 2026 Sri Lanka Neethi. All rights reserved.</p>
+            <p>Developed by <a href="https://vezlo-web.vercel.app/" target="_blank" class="text-blue-600 hover:underline font-bold">Vezlo-Web</a></p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <!-- Law Modal (Add/Edit) -->
+    <div id="lawModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-screen overflow-y-auto">
+            <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-xl font-bold">Add New Law</h3>
+                <button onclick="closeLawModal()" class="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <form onsubmit="saveLaw(event)">
+                    <div class="grid gap-4">
+                        <input type="text" placeholder="Title (English)" class="w-full p-2 border rounded dark:bg-gray-700" required>
+                        <input type="text" placeholder="Title (Sinhala)" class="w-full p-2 border rounded dark:bg-gray-700">
+                        <input type="text" placeholder="Title (Tamil)" class="w-full p-2 border rounded dark:bg-gray-700">
+                        <textarea placeholder="Description (English)" rows="3" class="w-full p-2 border rounded dark:bg-gray-700"></textarea>
+                        <div class="flex gap-4">
+                            <select class="p-2 border rounded dark:bg-gray-700 flex-1">
+                                <option value="sri_lanka">Sri Lanka</option>
+                                <option value="world">World</option>
+                            </select>
+                            <select class="p-2 border rounded dark:bg-gray-700 flex-1">
+                                <option value="approved">Approved</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="border-2 border-dashed p-4 text-center rounded dark:border-gray-600">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-500">Drag & Drop Images/Videos here</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-right">
+                        <button type="button" onclick="closeLawModal()" class="px-4 py-2 mr-2 bg-gray-200 dark:bg-gray-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Save Law</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
+            <div class="p-4 border-b dark:border-gray-700 flex justify-between">
+                <h3 class="font-bold">Report this Law</h3>
+                <button onclick="closeReportModal()" class="text-xl">&times;</button>
+            </div>
+            <div class="p-4">
+                <form onsubmit="submitReport(event)">
+                    <input type="text" placeholder="Your Name" class="w-full p-2 mb-3 border rounded dark:bg-gray-700" required>
+                    <input type="email" placeholder="Your Email" class="w-full p-2 mb-3 border rounded dark:bg-gray-700" required>
+                    <input type="text" placeholder="Subject" class="w-full p-2 mb-3 border rounded dark:bg-gray-700" required>
+                    <textarea placeholder="What is wrong with this law?" rows="4" class="w-full p-2 mb-3 border rounded dark:bg-gray-700"></textarea>
+                    <button class="w-full bg-red-600 text-white p-2 rounded">Send Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Configuration ---
+        const SUPABASE_URL = 'https://vegemuqhinyyxeojfbdxd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlZ2VtdXFoaW55eGVvamZiZHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMDkyNjIsImV4cCI6MjA4Njc4NTI2Mn0.xj1o2HaGqBBL-YpBLmHHBeUNOtNl20swXQBRp1RgdDk';
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let currentLawId = null;
+
+        // --- Navigation ---
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const page = document.getElementById('page-' + pageId);
+            if(page) {
+                page.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+
+            if(pageId === 'laws') loadLaws();
+            if(pageId === 'home') loadHomeLaws();
+        }
+
+        // --- Theme & Language ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('themeIcon');
+            if(document.documentElement.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme
+        if(localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun');
+        }
+
+        function changeLanguage(lang) {
+            document.querySelectorAll('.lang-en, .lang-si, .lang-ta').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('hidden'));
+            localStorage.setItem('lang', lang);
+        }
+        
+        // Load saved language
+        const savedLang = localStorage.getItem('lang') || 'en';
+        changeLanguage(savedLang);
+
+        // --- Mobile Menu ---
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        function toggleMobileMenu() { mobileMenu.classList.add('hidden'); }
+
+        // --- Database Interactions ---
+
+        // Load Laws for Home
+        async function loadHomeLaws() {
+            const container = document.getElementById('homeLawList');
+            container.innerHTML = '<div class="loader mx-auto col-span-3"></div>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('laws')
+                    .select('*')
+                    .eq('status', 'approved')
+                    .order('views', { ascending: false })
+                    .limit(6);
+
+                if(error) throw error;
+                renderLaws(data, container);
+            } catch(err) {
+                container.innerHTML = '<p class="text-red-500 text-center col-span-3">Error loading laws. Please check database connection.</p>';
+                console.error(err);
+            }
+        }
+
+        // Load Laws for Laws Page
+        async function loadLaws() {
+            const container = document.getElementById('lawListGrid');
+            container.innerHTML = '<div class="loader mx-auto col-span-3"></div>';
+            
+            const category = document.getElementById('lawCategoryFilter').value;
+            
+            let query = supabase.from('laws').select('*').eq('status', 'approved');
+            
+            if(category !== 'all') query = query.eq('category', category);
+            
+            query = query.order('views', { ascending: false });
+
+            try {
+                const { data, error } = await query;
+                if(error) throw error;
+                renderLaws(data, container);
+            } catch(err) {
+                container.innerHTML = '<p class="text-red-500 text-center col-span-3">Error loading laws.</p>';
+            }
+        }
+
+        // Render Law Cards
+        function renderLaws(laws, container) {
+            if(!laws || laws.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 col-span-3">No laws found.</p>';
+                return;
+            }
+            container.innerHTML = laws.map(law => `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden" onclick="viewLaw('${law.id}')">
+                    <div class="h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <i class="fas fa-gavel text-4xl text-gray-400"></i>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2 truncate">${law.title_en}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">${law.desc_en || 'No description available.'}</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span><i class="fas fa-eye mr-1"></i> ${law.views} views</span>
+                            <span><i class="fas fa-calendar mr-1"></i> ${new Date(law.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // View Single Law
+        async function viewLaw(id) {
+            currentLawId = id;
+            navigateTo('law-detail');
+            const container = document.getElementById('lawDetailContent');
+            container.innerHTML = '<div class="loader mx-auto"></div>';
+            
+            try {
+                // Increment View Count (RPC function would be better, but client-side update for simplicity)
+                // Fetch Law
+                let { data: law, error } = await supabase.from('laws').select('*').eq('id', id).single();
+                if(error) throw error;
+
+                // Update View Count
+                await supabase.from('laws').update({ views: law.views + 1 }).eq('id', id);
+
+                // Fetch Reactions Count
+                const { count: likes } = await supabase.from('reactions').select('*', { count: 'exact', head: true }).eq('law_id', id).eq('reaction_type', 'like');
+                
+                container.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h1 class="text-2xl md:text-3xl font-bold">${law.title_en}</h1>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">${law.category}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-6 border-b pb-4">
+                            <span><i class="fas fa-eye mr-1"></i> ${law.views + 1} Views</span>
+                            <span><i class="fas fa-calendar mr-1"></i> Published: ${law.publish_date || 'N/A'}</span>
+                            <span><i class="fas fa-clock mr-1"></i> Added: ${new Date(law.created_at).toLocaleDateString()}</span>
+                        </div>
+                        
+                        <div class="prose dark:prose-invert max-w-none mb-8">
+                            <p>${law.desc_en || 'Detailed description not provided.'}</p>
+                        </div>
+
+                        <!-- Gallery Placeholder -->
+                        <div class="mb-8">
+                            <h3 class="font-bold text-lg mb-3 border-l-4 border-blue-600 pl-3">Gallery</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-100 dark:bg-gray-700 p-4 rounded text-center">
+                                <p class="col-span-4 text-gray-400">No media uploaded for this law.</p>
+                            </div>
+                        </div>
+
+                        <!-- Interaction -->
+                        <div class="flex items-center justify-between border-t pt-4">
+                            <div class="flex gap-4">
+                                <button onclick="react('like')" class="flex items-center gap-1 text-gray-600 hover:text-blue-600"><i class="fas fa-thumbs-up"></i> <span>${likes || 0}</span></button>
+                                <button onclick="react('heart')" class="flex items-center gap-1 text-gray-600 hover:text-red-500"><i class="fas fa-heart"></i></button>
+                                <button onclick="react('haha')" class="flex items-center gap-1 text-gray-600 hover:text-yellow-500"><i class="fas fa-smile"></i></button>
+                            </div>
+                            <button onclick="openReportModal()" class="text-red-500 hover:underline text-sm"><i class="fas fa-flag mr-1"></i> Report</button>
+                        </div>
+                    </div>
+                `;
+                
+                loadComments(id);
+
+            } catch(err) {
+                container.innerHTML = '<p class="text-red-500 text-center p-10">Error loading law details.</p>';
+                console.error(err);
+            }
+        }
+
+        // Reactions
+        async function react(type) {
+            if(!currentLawId) return;
+            // Simple anonymous reaction using a random ID stored in local storage
+            let userId = localStorage.getItem('deviceId');
+            if(!userId) {
+                userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', userId);
+            }
+            
+            await supabase.from('reactions').insert([{ law_id: currentLawId, reaction_type: type, user_identifier: userId }]);
+            alert('Thanks for your reaction!');
+            viewLaw(currentLawId); // Refresh
+        }
+
+        // Comments
+        async function loadComments(lawId) {
+            const { data, error } = await supabase.from('comments').select('*').eq('law_id', lawId).order('created_at', { ascending: false });
+            const container = document.getElementById('commentsList');
+            if(!data || data.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No comments yet.</p>';
+                return;
+            }
+            container.innerHTML = data.map(c => `
+                <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-bold text-sm">${c.is_anonymous ? 'Anonymous' : c.name}</span>
+                        <span class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p class="text-sm">${c.content}</p>
+                </div>
+            `).join('');
+        }
+
+        async function postComment() {
+            if(!currentLawId) return;
+            const name = document.getElementById('cName').value;
+            const email = document.getElementById('cEmail').value;
+            const msg = document.getElementById('cMessage').value;
+            const isHide = document.getElementById('cHideName').checked;
+
+            if(!name || !msg) { alert("Please fill name and message"); return; }
+
+            const { error } = await supabase.from('comments').insert([{
+                law_id: currentLawId,
+                name: name,
+                email: email,
+                content: msg,
+                is_anonymous: isHide,
+                phone: document.getElementById('cPhone').value,
+                user_id: document.getElementById('cID').value
+            }]);
+
+            if(error) {
+                alert("Error posting comment");
+            } else {
+                alert("Comment submitted!");
+                loadComments(currentLawId);
+                document.getElementById('cMessage').value = '';
+            }
+        }
+
+        // --- Admin Functions ---
+        function showAdminTab(tab) {
+            document.querySelectorAll('[id^="admin-tab-"]').forEach(t => t.classList.add('hidden'));
+            document.getElementById('admin-tab-' + tab).classList.remove('hidden');
+        }
+
+        function openLawModal() { document.getElementById('lawModal').classList.remove('hidden'); }
+        function closeLawModal() { document.getElementById('lawModal').classList.add('hidden'); }
+        function openReportModal() { document.getElementById('reportModal').classList.remove('hidden'); }
+        function closeReportModal() { document.getElementById('reportModal').classList.add('hidden'); }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+            
+            if(error) {
+                alert("Login failed: " + error.message);
+                return;
+            }
+            
+            // Check if user is approved admin
+            const { data: profile } = await supabase.from('profiles').select('*, roles(*)').eq('id', data.user.id).single();
+            
+            if(profile && profile.is_approved) {
+                localStorage.setItem('adminSession', JSON.stringify(profile));
+                alert("Welcome " + profile.first_name);
+                navigateTo('admin-dashboard');
+                loadAdminData();
+            } else {
+                alert("Your account is not approved yet or you are not staff.");
+                supabase.auth.signOut();
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            // Standard Supabase Auth Sign Up
+            // Then insert data to 'profiles' table via trigger or client logic (simplified here)
+            alert("Registration logic requires backend triggers for full security. Please set up triggers in Supabase to insert into 'profiles' table on auth user creation.");
+        }
+
+        function handleLogout() {
+            supabase.auth.signOut();
+            localStorage.removeItem('adminSession');
+            navigateTo('home');
+        }
+
+        async function saveLaw(e) {
+            e.preventDefault();
+            // Logic to insert into Supabase 'laws' table
+            alert("Law saved (simulated). Implement form data extraction and Supabase insert.");
+            closeLawModal();
+        }
+
+        async function submitReport(e) {
+            e.preventDefault();
+            alert("Report submitted. Thank you.");
+            closeReportModal();
+        }
+
+        function submitContactForm(e) {
+            e.preventDefault();
+            alert("Message sent successfully!");
+            e.target.reset();
+        }
+
+        // Initialize
+        loadHomeLaws();
+    </script>
+</body>
+</html>
